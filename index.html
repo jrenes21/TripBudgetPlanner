@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travel Budget Planner</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #111319;
+      --ink: #e6e7ea;
+      --muted: #b9bdc7;
+      --accent: #c8a76b;
+      --accent-2: #8d6f3b;
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #0b0c10, #0f1117 35%, #12131a);
+      color: var(--ink);
+      font-family: Inter, system-ui, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px 16px
+    }
+
+    .title {
+      font-family: "Playfair Display", serif;
+      font-size: 38px;
+      margin: 0
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 6px 0 0
+    }
+
+    .wrap {
+      max-width: 1150px;
+      margin: 18px auto 60px;
+      padding: 0 20px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 22px
+    }
+
+    @media(max-width:980px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    .card .hd {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .card .bd {
+      padding: 18px 20px 22px
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 12px 0 6px
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, .1);
+      background: #0e1016;
+      color: var(--ink)
+    }
+
+    select:focus,
+    input:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(200, 167, 107, .15);
+      border-color: var(--accent)
+    }
+
+    .inline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    @media(max-width:720px) {
+      .inline {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .chip-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .chip {
+      position: relative
+    }
+
+    .chip input {
+      position: absolute;
+      inset: 0;
+      opacity: 0
+    }
+
+    .chip span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      cursor: pointer
+    }
+
+    .chip input:checked+span {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .btn {
+      all: unset;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: #0b0c10;
+      font-weight: 800;
+      border-radius: 12px;
+      cursor: pointer
+    }
+
+    .btn[disabled] {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    /* Result-only */
+    .total-wrap {
+      display: grid;
+      gap: 12px
+    }
+
+    .total-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(200, 167, 107, .14), rgba(200, 167, 107, .08));
+      border: 1px solid rgba(200, 167, 107, .35)
+    }
+
+    .total-label {
+      color: var(--muted)
+    }
+
+    .total-value {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: .3px
+    }
+
+    .fine {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    /* Moments */
+    .moments {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px
+    }
+
+    .moment {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: .45;
+      transition: opacity .3s ease
+    }
+
+    .moment.active {
+      opacity: 1;
+      color: #d6d8de
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #3b4152
+    }
+
+    .moment.active .dot {
+      background: var(--accent)
+    }
+
+    /* Progress track with plane (full-width travel) */
+    .progress {
+      position: relative;
+      height: 56px;
+      background: linear-gradient(180deg, #0e1117, #0f1219);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 999px;
+      overflow: hidden
+    }
+
+    .track {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 26px;
+      height: 6px;
+      background: linear-gradient(90deg, rgba(200, 167, 107, .18), rgba(200, 167, 107, .04));
+      border-radius: 8px
+    }
+
+    .plane {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      transition: transform .6s ease;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .35))
+    }
+
+    .plane svg {
+      width: 40px;
+      height: 40px
+    }
+
+    .plane .metal {
+      fill: url(#pg)
+    }
+
+    .plane .window {
+      fill: #1b2130
+    }
+
+    /* Ranked lists — luxe style */
+    .lists {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 10px
+    }
+
+    .list-card {
+      border: 1px solid rgba(255, 255, 255, .06);
+      background: linear-gradient(180deg, #0e1117, #0f1219);
+      border-radius: 16px
+    }
+
+    .list-card .hd {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      color: #e7e9f2;
+      font-weight: 700;
+      letter-spacing: .2px
+    }
+
+    .list-card .bd {
+      padding: 12px 14px 16px
+    }
+
+    .rank-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px
+    }
+
+    .rank-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: radial-gradient(100% 120% at 0% 0%, rgba(200, 167, 107, .10), rgba(200, 167, 107, .02));
+      border-radius: 14px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: all .4s ease;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .25)
+    }
+
+    .rank-item.show {
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    .badge {
+      min-width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+      color: #0b0c10;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3)
+    }
+
+    .item-body {
+      display: grid;
+      gap: 4px
+    }
+
+    .item-name {
+      font-weight: 700
+    }
+
+    .reason {
+      font-size: 12.5px;
+      color: #c7cad6;
+      opacity: .9;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start
+    }
+
+    .quote {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: rgba(200, 167, 107, .18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #e9d9b0;
+      font-weight: 900;
+      line-height: 1
+    }
+
+    /* Map */
+    .map-wrap {
+      margin-top: 14px;
+      background: #0f1219;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 14px;
+      overflow: hidden
+    }
+
+    .map-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .map {
+      width: 100%;
+      height: 360px;
+      display: block
+    }
+
+    .ocean {
+      fill: url(#oceanGrad)
+    }
+
+    .graticule {
+      fill: none;
+      stroke: #232838;
+      stroke-width: .7;
+      stroke-opacity: .6
+    }
+
+    .land {
+      fill: #1a2331;
+      stroke: #3a475e;
+      stroke-width: .5
+    }
+
+    .coast {
+      fill: none;
+      stroke: #4c5c78;
+      stroke-width: .6;
+      stroke-opacity: .8
+    }
+
+    .marker {
+      fill: #d0d4de;
+      stroke: #0b0c10;
+      stroke-width: 1;
+      cursor: pointer;
+      opacity: .95
+    }
+
+    .marker:hover {
+      fill: var(--accent)
+    }
+
+    .marker[data-selected="true"] {
+      fill: var(--accent);
+      r: 6
+    }
+
+    /* Datepicker — refined typography */
+    .date-wrap {
+      position: relative
+    }
+
+    .cal-btn {
+      position: absolute;
+      right: 10px;
+      top: 36px;
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      cursor: pointer
+    }
+
+    .datepicker {
+      position: absolute;
+      z-index: 20;
+      top: 72px;
+      left: 0;
+      background: #0f1219;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+      width: 320px;
+      display: none;
+      font-family: "Playfair Display", serif
+    }
+
+    .datepicker.show {
+      display: block
+    }
+
+    .dp-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      font-weight: 700;
+      letter-spacing: .3px
+    }
+
+    .dp-hd button {
+      all: unset;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      font-family: Inter, sans-serif
+    }
+
+    .dp-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      padding: 12px
+    }
+
+    .dp-cell {
+      padding: 9px 0;
+      text-align: center;
+      border-radius: 10px;
+      color: #e5e7ef;
+      font-family: Inter, sans-serif
+    }
+
+    .dp-cell.muted {
+      opacity: .35
+    }
+
+    .dp-cell.disabled {
+      opacity: .25;
+      pointer-events: none
+    }
+
+    .dp-cell:hover {
+      background: rgba(200, 167, 107, .12)
+    }
+
+    .dp-cell.sel {
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: #0b0c10;
+      font-weight: 900
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1 class="title">Travel Budget Planner</h1>
+    <p class="subtitle">地図 or プルダウンで都市を選び、合計だけを上品に表示。ローディングは“モーメント”＋飛行機の演出。</p>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <section class="card">
+        <div class="hd">
+          <h2>Plan</h2><small class="muted">Map selectable ✨</small>
+        </div>
+        <div class="bd">
+          <label>Trip purpose</label>
+          <div class="chip-group" role="radiogroup">
+            <label class="chip"><input type="radio" name="purpose" value="backpacker" checked><span>①
+                Backpacker</span></label>
+            <label class="chip"><input type="radio" name="purpose" value="date"><span>② Date Trip</span></label>
+            <label class="chip"><input type="radio" name="purpose" value="family"><span>③ Family Trip</span></label>
+          </div>
+          <div class="inline">
+            <div>
+              <label>Departure</label>
+              <select id="origin">
+                <option value="HND">Tokyo — Haneda (HND)</option>
+                <option value="NRT">Tokyo — Narita (NRT)</option>
+              </select>
+            </div>
+            <div>
+              <label>Cabin</label>
+              <select id="cabin">
+                <option value="economy">Economy</option>
+                <option value="business">Business</option>
+                <option value="first">First</option>
+              </select>
+            </div>
+          </div>
+          <div class="inline">
+            <div>
+              <label>Destination (Top cities)</label>
+              <select id="destination"></select>
+            </div>
+            <div>
+              <label>…or type a city (English)</label>
+              <input id="custom-city" type="text" placeholder="e.g., Zurich" />
+            </div>
+          </div>
+          <div class="inline">
+            <div class="date-wrap">
+              <label>Date</label>
+              <input id="date" type="date" />
+              <button id="open-cal" class="cal-btn" aria-label="Open calendar">📅</button>
+              <div id="datepicker" class="datepicker" role="dialog" aria-modal="true" aria-label="Date picker">
+                <div class="dp-hd">
+                  <button id="prev-month">◀</button>
+                  <div id="dp-title">—</div>
+                  <button id="next-month">▶</button>
+                </div>
+                <div class="dp-grid" id="dp-grid"></div>
+              </div>
+            </div>
+            <div><label>Nights</label><input id="nights" type="number" min="1" value="3"></div>
+          </div>
+          <div class="inline">
+            <div><label>Hotel Rank</label><select id="hotel-rank">
+                <option value="standard">Standard (★3)</option>
+                <option value="upper">Upper (★4)</option>
+                <option value="luxury">Luxury (★5)</option>
+              </select></div>
+            <div style="display:flex;align-items:end;"><button id="btn-run" class="btn">Estimate Budget</button></div>
+          </div>
+
+          <div class="map-wrap" aria-label="World map city selector">
+            <div class="map-hd"><span>World map — click a dot to select destination</span><span id="map-hint">No city
+                selected</span></div>
+            <svg id="world" class="map" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd">
+          <h2>Budget</h2><small id="status">Ready</small>
+        </div>
+        <div class="bd">
+          <div class="total-wrap">
+            <div class="progress" id="progress">
+              <div class="track"></div>
+              <div class="plane" id="plane">
+                <svg viewBox="0 0 80 80" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#f2e6bf" />
+                      <stop offset="100%" stop-color="#c8a76b" />
+                    </linearGradient>
+                  </defs>
+                  <path class="metal"
+                    d="M6 42 L66 40 C69 40 72 37 72 34 C72 33 71 32 70 32 L40 32 L8 28 L10 34 L8 38 Z" />
+                  <path class="metal" d="M30 34 L54 42 L30 46 Z" />
+                  <path class="metal" d="M12 34 L18 38 L12 42 Z" />
+                  <circle class="window" cx="44" cy="36" r="2" />
+                  <circle class="window" cx="48" cy="36" r="2" />
+                  <circle class="window" cx="52" cy="36" r="2" />
+                </svg>
+              </div>
+            </div>
+            <div class="moments" id="moments">
+              <div class="moment" id="m1">
+                <div class="dot"></div>
+                <div>Fetching fares…</div>
+              </div>
+              <div class="moment" id="m2">
+                <div class="dot"></div>
+                <div>Aggregating hotels…</div>
+              </div>
+              <div class="moment" id="m3">
+                <div class="dot"></div>
+                <div>Seasonality & fees…</div>
+              </div>
+              <div class="moment" id="m4">
+                <div class="dot"></div>
+                <div>Final touches…</div>
+              </div>
+            </div>
+            <div class="total-card" style="margin-top:8px;">
+              <div class="total-label">Estimated Total</div>
+              <div class="total-value" id="total">—</div>
+            </div>
+            <div class="fine">Updated <span id="updated">—</span> • <a id="deeplink" class="link" href="#"
+                target="_blank" rel="noopener">Open Skyscanner</a></div>
+          </div>
+
+          <div class="lists">
+            <div class="list-card">
+              <div class="hd" id="hotels-hd">Hotel Picks (Top 5)</div>
+              <div class="bd">
+                <ul id="hotels-list" class="rank-list"></ul>
+              </div>
+            </div>
+            <div class="list-card">
+              <div class="hd">Souvenirs (Top 5)</div>
+              <div class="bd">
+                <ul id="gifts-list" class="rank-list"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/d3@7"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+
+  <script>
+    // ===== CONFIG =====
+    const CONFIG = {
+      useLiveAPI: false,
+      proxyUrl: "/api/flight",
+      useReviewAPI: true,
+      reviewsProxyUrl: "https://api.allorigins.win/raw", // 例: /api/reviews
+      reviewsMethod: "GET", // or "POST"
+      reviewApiHeaders: {} // 例: {"x-api-key":"..."}
+    };
+
+    // ===== DESTINATIONS =====
+    const DESTS = [
+      { city: "Seoul", country: "Korea", iata: "ICN", lat: 37.46, lon: 126.44, band: "near", hotel: { standard: 14000, upper: 24000, luxury: 50000 } },
+      { city: "Taipei", country: "Taiwan", iata: "TPE", lat: 25.04, lon: 121.56, band: "near", hotel: { standard: 12000, upper: 20000, luxury: 40000 } },
+      { city: "Shanghai", country: "China", iata: "PVG", lat: 31.23, lon: 121.47, band: "near", hotel: { standard: 13000, upper: 22000, luxury: 45000 } },
+      { city: "Hong Kong", country: "China", iata: "HKG", lat: 22.30, lon: 114.17, band: "near", hotel: { standard: 17000, upper: 30000, luxury: 60000 } },
+      { city: "Singapore", country: "Singapore", iata: "SIN", lat: 1.35, lon: 103.82, band: "seasia", hotel: { standard: 18000, upper: 32000, luxury: 65000 } },
+      { city: "Bangkok", country: "Thailand", iata: "BKK", lat: 13.75, lon: 100.50, band: "seasia", hotel: { standard: 8000, upper: 15000, luxury: 35000 } },
+      { city: "Kuala Lumpur", country: "Malaysia", iata: "KUL", lat: 3.14, lon: 101.69, band: "seasia", hotel: { standard: 9000, upper: 15000, luxury: 30000 } },
+      { city: "Jakarta", country: "Indonesia", iata: "CGK", lat: -6.21, lon: 106.85, band: "seasia", hotel: { standard: 9000, upper: 16000, luxury: 30000 } },
+      { city: "Delhi", country: "India", iata: "DEL", lat: 28.61, lon: 77.21, band: "south_asia", hotel: { standard: 11000, upper: 20000, luxury: 40000 } },
+      { city: "Dubai", country: "UAE", iata: "DXB", lat: 25.20, lon: 55.27, band: "mideast", hotel: { standard: 18000, upper: 35000, luxury: 80000 } },
+      { city: "Sydney", country: "Australia", iata: "SYD", lat: -33.87, lon: 151.21, band: "oceania", hotel: { standard: 20000, upper: 35000, luxury: 70000 } },
+      { city: "Melbourne", country: "Australia", iata: "MEL", lat: -37.81, lon: 144.96, band: "oceania", hotel: { standard: 18000, upper: 32000, luxury: 60000 } },
+      { city: "London", country: "UK", iata: "LHR", lat: 51.50, lon: -0.12, band: "europe", hotel: { standard: 25000, upper: 45000, luxury: 90000 } },
+      { city: "Paris", country: "France", iata: "CDG", lat: 48.86, lon: 2.35, band: "europe", hotel: { standard: 25000, upper: 45000, luxury: 90000 } },
+      { city: "Rome", country: "Italy", iata: "FCO", lat: 41.90, lon: 12.50, band: "europe", hotel: { standard: 20000, upper: 38000, luxury: 75000 } },
+      { city: "New York", country: "USA", iata: "JFK", lat: 40.71, lon: -74.01, band: "na_east", hotel: { standard: 35000, upper: 60000, luxury: 120000 } },
+      { city: "Los Angeles", country: "USA", iata: "LAX", lat: 34.05, lon: -118.25, band: "na_west", hotel: { standard: 24000, upper: 42000, luxury: 85000 } },
+      { city: "San Francisco", country: "USA", iata: "SFO", lat: 37.77, lon: -122.42, band: "na_west", hotel: { standard: 28000, upper: 50000, luxury: 100000 } },
+      { city: "Vancouver", country: "Canada", iata: "YVR", lat: 49.28, lon: -123.12, band: "na_west", hotel: { standard: 22000, upper: 38000, luxury: 75000 } },
+      { city: "Honolulu", country: "USA", iata: "HNL", lat: 21.31, lon: -157.86, band: "hawaii", hotel: { standard: 30000, upper: 50000, luxury: 100000 } },
+      // South America
+      { city: "Buenos Aires", country: "Argentina", iata: "EZE", lat: -34.60, lon: -58.38, band: "sa", hotel: { standard: 15000, upper: 25000, luxury: 80000 } },
+      { city: "São Paulo", country: "Brazil", iata: "GRU", lat: -23.55, lon: -46.63, band: "sa", hotel: { standard: 17000, upper: 28000, luxury: 90000 } },
+      { city: "Lima", country: "Peru", iata: "LIM", lat: -12.05, lon: -77.05, band: "sa", hotel: { standard: 14000, upper: 24000, luxury: 80000 } },
+      // Africa
+      { city: "Cairo", country: "Egypt", iata: "CAI", lat: 30.044, lon: 31.235, band: "africa", hotel: { standard: 12000, upper: 22000, luxury: 70000 } },
+      { city: "Nairobi", country: "Kenya", iata: "NBO", lat: -1.286, lon: 36.817, band: "africa", hotel: { standard: 15000, upper: 26000, luxury: 85000 } },
+      { city: "Cape Town", country: "South Africa", iata: "CPT", lat: -33.925, lon: 18.424, band: "africa", hotel: { standard: 18000, upper: 30000, luxury: 100000 } },
+    ];
+
+    const BANDS = {
+      near: { economy: 45000, business: 160000, first: 380000 },
+      seasia: { economy: 80000, business: 250000, first: 500000 },
+      south_asia: { economy: 95000, business: 300000, first: 600000 },
+      oceania: { economy: 120000, business: 420000, first: 800000 },
+      mideast: { economy: 120000, business: 420000, first: 900000 },
+      europe: { economy: 150000, business: 550000, first: 1200000 },
+      na_west: { economy: 140000, business: 520000, first: 1100000 },
+      na_east: { economy: 170000, business: 650000, first: 1400000 },
+      hawaii: { economy: 130000, business: 500000, first: 1100000 },
+      sa: { economy: 180000, business: 680000, first: 1400000 },
+      africa: { economy: 170000, business: 600000, first: 1300000 }
+    };
+
+    // Hotel star mapping by rank
+    const STAR_BY_RANK = { standard: 3, upper: 4, luxury: 5 };
+    // Purpose keywords to steer API side filtering
+    const PURPOSE_TAGS = {
+      backpacker: ["hostel", "guesthouse", "backpackers", "capsule", "dorm", "budget"],
+      date: ["romantic", "boutique", "adults only", "luxury", "spa", "design hotel", "couple"],
+      family: ["family", "resort", "kids club", "aparthotel", "suite", "villa", "pool", "waterpark"]
+    };
+    const PURPOSE_AUDIENCE = { backpacker: "solo", date: "couple", family: "family" };
+    // Rank → star range (standard ≤★3, upper ★4, luxury ★5)
+    const STAR_RANGE = {
+      standard: { min: 1, max: 3, label: "≤★3" },
+      upper: { min: 4, max: 4, label: "★★★★" },
+      luxury: { min: 5, max: 5, label: "★★★★★" }
+    };
+    // Wikidata star rating QIDs
+    const WD_STAR_ID = { '5': 'Q109248725', '4': 'Q110772653', '3': 'Q110772652', '2': 'Q1124310' };
+    const WIKIDATA_SPARQL = 'https://query.wikidata.org/sparql';
+    // Purpose bias for ordering
+    const PURPOSE_BIAS = {
+      backpacker: ["hostel", "capsule", "guesthouse", "backpackers", "pod"],
+      date: ["boutique", "palace", "ritz", "design", "spa", "luxury", "romantic"],
+      family: ["resort", "suites", "villa", "family", "kids", "beach", "waterpark"]
+    };
+
+    // ===== Placeholder for gifts only (hotels are API-only) =====
+    const LISTS = {
+      backpacker: {
+        gifts: c => [
+          { name: `${c} Street Snack Pack`, reason: `「現地の味がそのまま楽しめる」` },
+          { name: `${c} Local Tea/Beans`, reason: `「香りがよくて喜ばれた」` },
+          { name: `${c} Craft Keychain`, reason: `「小さくて配りやすい」` },
+          { name: `${c} Magnet Set`, reason: `「定番だけどデザインが可愛い」` },
+          { name: `${c} Transit Card Holder`, reason: `「実用的で毎日使える」` },]
+      },
+      date: {
+        gifts: c => [
+          { name: `${c} Artisan Chocolate Box`, reason: `「上品な口どけでセンスが良い」` },
+          { name: `${c} Boutique Candle`, reason: `「香りが長持ちして特別感」` },
+          { name: `${c} Silk Scarf`, reason: `「手触りが滑らかで高見え」` },
+          { name: `${c} Scent Diffuser`, reason: `「部屋に置くだけで雰囲気が変わる」` },
+          { name: `${c} Leather Card Case`, reason: `「使うほど馴染む質感が良い」` },]
+      },
+      family: {
+        gifts: c => [
+          { name: `${c} Character Plush`, reason: `「ふわふわで子どもが手放さない」` },
+          { name: `${c} Jigsaw Puzzle`, reason: `「家に帰ってからも楽しめる」` },
+          { name: `${c} Local Cookies`, reason: `「軽くて配りやすい」` },
+          { name: `${c} Sticker Set`, reason: `「お小遣いでも買える可愛さ」` },
+          { name: `${c} Stationery Pack`, reason: `「学校でも使えて実用的」` },]
+      }
+    };
+
+    const fmtJPY = n => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(n);
+    const byId = id => document.getElementById(id);
+
+    function initCities() {
+      const sel = byId('destination');
+      if (!sel) return;
+      sel.innerHTML = DESTS.map(d => `<option value="${d.iata}">${d.city}, ${d.country} (${d.iata})</option>`).join('');
+      if (sel.options.length > 0) sel.selectedIndex = 0;
+    }
+    function defaultDate() { const input = byId('date'); if (!input) return; const today = new Date(); const pad = n => String(n).padStart(2, '0'); const toISO = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`; input.min = toISO(today); const d = new Date(); d.setDate(d.getDate() + 30); input.value = toISO(d); }
+    function findCityByIATA(i) { return DESTS.find(d => d.iata === i); }
+    function normStr(s) { try { return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); } catch (_) { return (s || '').toLowerCase(); } }
+    function findCityByName(n) { if (!n) return null; const s = normStr(n.trim()); let hit = DESTS.find(d => normStr(d.city) === s || (d.iata || '').toLowerCase() === s); if (hit) return hit; hit = DESTS.find(d => normStr(d.city).startsWith(s)); if (hit) return hit; return DESTS.find(d => normStr(d.city).includes(s)) || null; }
+    function seasonalAdj(date) { if (!date) return 1; const d = new Date(date + 'T12:00:00'); const m = d.getMonth() + 1; const day = d.getDate(); if (m === 8) return 1.2; if ((m === 12 && day >= 20) || (m === 1 && day <= 7)) return 1.2; if ((m === 4 && day >= 25) || (m === 5 && day <= 7)) return 1.15; return 1; }
+    function buildSkyscannerDeeplink(origin, dest, date, cabin) { const y = date.slice(0, 4), m = date.slice(5, 7), d = date.slice(8, 10); return `https://www.skyscanner.jp/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${y}${m}${d}/?cabinclass=${encodeURIComponent(cabin)}`; }
+    function estimateFlightPrice(dest, cabin, date) { const band = BANDS[dest.band]; if (!band) return 120000; return Math.round(band[cabin] * seasonalAdj(date)); }
+    function hotelNightlyJPY(dest, rank) { return (dest.hotel || {})[rank] || 20000; }
+
+    function animateNumber(el, from, to, duration = 900) { const start = performance.now(); const fmt = v => fmtJPY(Math.round(v)); const ease = t => 1 - Math.pow(1 - t, 3); const frame = now => { const p = Math.min(1, (now - start) / duration); const v = from + (to - from) * ease(p); el.textContent = fmt(v); if (p < 1) requestAnimationFrame(frame); }; requestAnimationFrame(frame); }
+    function revealRankedList(containerId, items) { const ul = byId(containerId); ul.innerHTML = ''; if (!items || !items.length) { const li = document.createElement('li'); li.className = 'rank-item show'; li.innerHTML = '<div class="item-body"><div class="item-name">No results</div><div class="reason"><span class="quote">“</span><span>APIから該当のホテルが取得できませんでした。</span></div></div>'; ul.appendChild(li); return; } items.slice(0, 5).forEach((it, idx) => { const li = document.createElement('li'); li.className = 'rank-item'; const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = String(idx + 1); const body = document.createElement('div'); body.className = 'item-body'; const name = document.createElement('div'); name.className = 'item-name'; name.textContent = it.name || "Unnamed"; const reasonWrap = document.createElement('div'); reasonWrap.className = 'reason'; const q = document.createElement('span'); q.className = 'quote'; q.textContent = '“'; const reason = document.createElement('span'); reason.textContent = (it.reason || ''); reasonWrap.appendChild(q); reasonWrap.appendChild(reason); body.appendChild(name); body.appendChild(reasonWrap); li.appendChild(badge); li.appendChild(body); setTimeout(() => { ul.appendChild(li); requestAnimationFrame(() => li.classList.add('show')); }, 240 * idx); }); }
+
+    // Plane progress in pixels
+    function setPlaneProgress(percent) { const prog = byId('progress'); const track = prog.querySelector('.track'); const plane = byId('plane'); if (!prog || !track || !plane) return; const progB = prog.getBoundingClientRect(); const trackB = track.getBoundingClientRect(); const planeW = plane.getBoundingClientRect().width || 40; const startX = Math.max(0, trackB.left - progB.left); const maxX = Math.max(0, trackB.width - planeW); const x = startX + Math.max(0, Math.min(maxX, maxX * percent)); plane.style.transform = `translateX(${x}px)`; }
+
+    // ---- Hotels fetch (API only; purpose + stars) ----
+    async function fetchHotelsSmart(cityName, purpose, rank, dest) {
+      // 1) Try your primary API first (unchanged behavior)
+      const primary = await (async () => {
+        if (!CONFIG.useReviewAPI || !CONFIG.reviewsProxyUrl) return [];
+        const range = STAR_RANGE[rank] || STAR_RANGE.standard;
+        const stars = STAR_BY_RANK[rank] || 3;
+        const tags = PURPOSE_TAGS[purpose] || [];
+        const audience = PURPOSE_AUDIENCE[purpose] || purpose;
+        const baseParams = {
+          type: 'hotels',
+          q: `${cityName} ${tags.join(' ')}`.trim(),
+          city: cityName,
+          iata: dest?.iata || '',
+          lat: dest?.lat?.toString() || '',
+          lon: dest?.lon?.toString() || '',
+          country: dest?.country || '',
+          purpose,
+          purpose_alt: audience,
+          rank,
+          tier: rank,
+          stars: String(stars), star: String(stars), rating: String(stars),
+          minStars: String(range.min), maxStars: String(range.max),
+          stars_min: String(range.min), stars_max: String(range.max),
+          star_min: String(range.min), star_max: String(range.max),
+          rating_class_min: String(range.min), rating_class_max: String(range.max),
+          starRatingMin: String(range.min), starRatingMax: String(range.max),
+          tags: tags.join(','), keywords: tags.join(','), categories: tags.join(','),
+          audience, limit: '5', sort: 'rating', _: Date.now().toString()
+        };
+        async function callApi(params) {
+          const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort('timeout'), 12000);
+          try {
+            const baseHeaders = { Accept: 'application/json' }; const headers = Object.assign({}, baseHeaders, CONFIG.reviewApiHeaders || {});
+            let res;
+            if ((CONFIG.reviewsMethod || 'GET').toUpperCase() === 'POST') {
+              res = await fetch(CONFIG.reviewsProxyUrl, { method: 'POST', mode: 'cors', credentials: 'omit', signal: ctrl.signal, headers: Object.assign({ 'Content-Type': 'application/json' }, headers), body: JSON.stringify(params) });
+            } else {
+              const qs = new URLSearchParams(); Object.entries(params).forEach(([k, v]) => { if (v !== '' && v != null) qs.set(k, v); });
+              res = await fetch(`${CONFIG.reviewsProxyUrl}?${qs.toString()}`, { method: 'GET', mode: 'cors', cache: 'no-store', credentials: 'omit', signal: ctrl.signal, headers });
+            }
+            clearTimeout(timer);
+            if (!res.ok) return [];
+            let data; try { data = await res.json(); } catch (e) { const t = await res.text(); try { data = JSON.parse(t); } catch { return []; } }
+            const arr = data?.hotels || data?.results || data?.items || data?.data || [];
+            const mapped = arr.map(h => ({
+              name: h.name || h.title || h.hotel_name || h.property_name || '',
+              reason: h.snippet || h.review || h.comment || h.text || h.review_summary || '',
+              stars: h.stars ?? h.star ?? h.rating ?? h.class ?? h.category ?? null
+            })).filter(x => x.name);
+            const within = mapped.filter(x => { if (x.stars == null) return true; const s = Number(String(x.stars).replace(/[^0-9.]/g, '')); const r = Math.round(s); const rg = STAR_RANGE[rank] || STAR_RANGE.standard; return r >= rg.min && r <= rg.max; });
+            const out = []; const seen = new Set();
+            for (const it of (within.length ? within : mapped)) {
+              const key = (it.name || '').toLowerCase(); if (!seen.has(key)) { seen.add(key); out.push({ name: it.name, reason: it.reason }); }
+              if (out.length >= 5) break;
+            }
+            return out;
+          } catch (e) { clearTimeout(timer); return []; }
+        }
+        let r = await callApi(baseParams); if (r.length) return r;
+        const softened = Object.assign({}, baseParams);
+        delete softened.minStars; delete softened.maxStars; delete softened.stars_min; delete softened.stars_max; delete softened.star_min; delete softened.star_max; delete softened.rating_class_min; delete softened.rating_class_max; delete softened.starRatingMin; delete softened.starRatingMax;
+        r = await callApi(softened); return r;
+      })();
+      if (primary.length >= 3) return primary; // enough to show
+
+      // 2) Wikidata fallback: star-aware around (lon,lat)
+      const wikidata = await fetchHotelsFromWikidata(dest, rank, purpose);
+      if (wikidata.length) return wikidata.slice(0, 5);
+
+      // 3) Final safety: return whatever we had (maybe 0)
+      return primary.slice(0, 5);
+    }
+
+    async function fetchHotelsFromWikidata(dest, rank, purpose) {
+      if (!dest || dest.lon == null || dest.lat == null) return [];
+      const radiusKm = 30; // search radius
+      const lon = Number(dest.lon).toFixed(4), lat = Number(dest.lat).toFixed(4);
+      const rankKey = rank === 'luxury' ? '5' : rank === 'upper' ? '4' : '3';
+      const qids = rank === 'standard' ? [WD_STAR_ID['3'], WD_STAR_ID['2']] : [WD_STAR_ID[rankKey]];
+      const values = qids.filter(Boolean).map(id => `wd:${id}`).join(' ');
+
+      // First try with star filter
+      let query = `
+  SELECT ?item ?itemLabel ?itemDescription WHERE {
+    SERVICE wikibase:around { ?item wdt:P625 ?loc . bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral ; wikibase:radius "${radiusKm}" . }
+    ?item wdt:P31 wd:Q27686 .
+    OPTIONAL { ?item wdt:P10290 ?rating . }
+    ${values ? `VALUES ?rating { ${values} }` : ''}
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "en,ja,en-gb,fr,de,es". }
+  }
+  LIMIT 50`;
+      let list = await runSparql(query);
+      if (list.length < 3) {
+        // retry without star filter, still hotel type
+        query = `
+    SELECT ?item ?itemLabel ?itemDescription WHERE {
+      SERVICE wikibase:around { ?item wdt:P625 ?loc . bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral ; wikibase:radius "${radiusKm}" . }
+      ?item wdt:P31 wd:Q27686 .
+      SERVICE wikibase:label { bd:serviceParam wikibase:language "en,ja,en-gb,fr,de,es". }
+    }
+    LIMIT 80`;
+        list = await runSparql(query);
+      }
+      // bias by purpose keywords
+      const bias = (PURPOSE_BIAS[purpose] || []).map(s => s.toLowerCase());
+      const scored = list.map(x => {
+        const name = x.label || ''; const desc = x.desc || '';
+        const text = `${name} ${desc}`.toLowerCase();
+        let score = 0; for (const w of bias) { if (text.includes(w)) score += 2; }
+        // nudge famous brands for date/family
+        if (purpose === 'date' && /(four seasons|rosewood|aman|ritz|palace)/i.test(name)) score += 3;
+        if (purpose === 'family' && /(resort|club med|disney|marriott|hilton|hyatt)/i.test(name)) score += 2;
+        return { name, reason: desc || 'Listed on Wikidata', score };
+      });
+      scored.sort((a, b) => b.score - a.score);
+      const out = []; const seen = new Set();
+      for (const it of scored) { const key = it.name.toLowerCase(); if (!seen.has(key)) { seen.add(key); out.push({ name: it.name, reason: it.reason }); } if (out.length >= 5) break; }
+      return out;
+    }
+
+    async function runSparql(query) {
+      try {
+        const url = `${WIKIDATA_SPARQL}?format=json&query=${encodeURIComponent(query)}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/sparql-results+json' } });
+        if (!res.ok) return [];
+        const data = await res.json();
+        const rows = data?.results?.bindings || [];
+        return rows.map(b => ({
+          uri: b.item?.value,
+          label: b.itemLabel?.value,
+          desc: b.itemDescription?.value
+        })).filter(x => x.label);
+      } catch (e) { return []; }
+    }
+
+    async function getTopLists(cityName, purpose, rank, dest) {
+      const hotels = await fetchHotelsSmart(cityName, purpose, rank, dest);
+      return { hotels, gifts: (LISTS[purpose] || LISTS.backpacker).gifts(cityName) };
+    }
+
+    async function calc() {
+      const btn = byId('btn-run'); btn.disabled = true; const status = byId('status');
+      try {
+        const origin = byId('origin').value; const cabin = byId('cabin').value; const nights = Math.max(1, parseInt(byId('nights').value || '0', 10)); const date = byId('date').value || new Date().toISOString().slice(0, 10); const rank = byId('hotel-rank').value; const typed = byId('custom-city').value.trim();
+        let dest = null; if (typed) { dest = findCityByName(typed); } if (!dest) { dest = findCityByIATA(byId('destination').value); } const cityName = dest ? dest.city : (typed || 'Destination');
+        const purpose = (document.querySelector('input[name="purpose"]:checked') || {}).value || 'backpacker';
+
+        // Moments + plane
+        const steps = [byId('m1'), byId('m2'), byId('m3'), byId('m4')]; steps.forEach(s => s.classList.remove('active')); status.textContent = 'Calculating…'; setPlaneProgress(0);
+        const tick = (i, p) => { steps[i].classList.add('active'); setPlaneProgress(p); };
+        tick(0, 0.15); await new Promise(r => setTimeout(r, 380));
+        tick(1, 0.45); await new Promise(r => setTimeout(r, 480));
+        tick(2, 0.78); await new Promise(r => setTimeout(r, 520));
+
+        // compute silently
+        const nightly = dest ? hotelNightlyJPY(dest, rank) : 20000; const hotelTotal = nightly * nights;
+        const flight = dest ? estimateFlightPrice(dest, cabin, date) : 120000;
+        const subtotal = flight + hotelTotal; const buffer = Math.round(subtotal * 0.10); const total = subtotal + buffer;
+
+        tick(3, 1.0); await new Promise(r => setTimeout(r, 340));
+
+        // reveal total
+        animateNumber(byId('total'), Math.max(60000, total * 0.7), total, 900);
+        byId('updated').textContent = new Date().toLocaleString('ja-JP');
+        const a = byId('deeplink'); a.href = dest ? buildSkyscannerDeeplink(origin, dest.iata, date, cabin) : '#'; a.style.opacity = dest ? 1 : .5; a.style.pointerEvents = dest ? 'auto' : 'none';
+
+        // lists (API only for hotels)
+        const lists = await getTopLists(cityName, purpose, rank, dest);
+        // update header stars (range label)
+        const sr = STAR_RANGE[rank] || STAR_RANGE.standard;
+        const hd = byId('hotels-hd'); if (hd) hd.textContent = `Hotel Picks (Top 5) — ${sr.label}`; if (hd) hd.textContent = `Hotel Picks (Top 5) — `;
+        revealRankedList('hotels-list', lists.hotels);
+        setTimeout(() => { revealRankedList('gifts-list', lists.gifts); }, 200);
+
+        status.textContent = 'Done';
+      } catch (err) { console.error(err); status.textContent = 'Error — check console'; }
+      finally { btn.disabled = false; }
+    }
+
+    // ===== D3 world map =====
+    async function drawMapD3() {
+      try {
+        if (typeof d3 === 'undefined' || typeof topojson === 'undefined') { return; }
+        const svg = d3.select('#world'); if (svg.empty()) return; svg.selectAll('*').remove();
+        const node = svg.node(); const rect = node.getBoundingClientRect(); const W = rect.width || 1000, H = rect.height || 500; svg.attr('viewBox', `0 0 ${W} ${H}`);
+        const defs = svg.append('defs'); const grad = defs.append('linearGradient').attr('id', 'oceanGrad').attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%'); grad.append('stop').attr('offset', '0%').attr('stop-color', '#0f1b2a'); grad.append('stop').attr('offset', '100%').attr('stop-color', '#0b1320');
+        const g = svg.append('g');
+        const projection = d3.geoNaturalEarth1().fitExtent([[8, 8], [W - 8, H - 8]], { type: 'Sphere' }); const path = d3.geoPath(projection);
+        g.append('path').attr('class', 'ocean').attr('d', path({ type: 'Sphere' }));
+        const graticule = d3.geoGraticule10(); g.append('path').attr('class', 'graticule').attr('d', path(graticule));
+        const landTopo = await d3.json('https://unpkg.com/world-atlas@2/land-110m.json'); const land = topojson.feature(landTopo, landTopo.objects.land); g.append('path').attr('class', 'land').attr('d', path(land)); g.append('path').attr('class', 'coast').attr('d', path(land));
+        const markers = svg.append('g').attr('id', 'markers'); const sel = byId('destination'); const custom = byId('custom-city');
+        markers.selectAll('circle').data(DESTS).enter().append('circle').attr('class', 'marker').attr('r', 4.8).attr('cx', d => projection([d.lon, d.lat])[0]).attr('cy', d => projection([d.lon, d.lat])[1]).on('click', (event, d) => { if (sel) { sel.value = d.iata; } if (custom) { custom.value = ''; } markers.selectAll('circle').attr('data-selected', 'false'); d3.select(event.currentTarget).attr('data-selected', 'true'); byId('map-hint').textContent = `Selected: ${d.city} (${d.iata})`; }).append('title').text(d => `${d.city} (${d.iata})`);
+      } catch (e) { console.error('drawMapD3 error', e); }
+    }
+
+    // ===== Datepicker (custom) =====
+    function buildDatepicker() {
+      const dp = document.getElementById('datepicker'); const grid = document.getElementById('dp-grid'); const title = document.getElementById('dp-title'); const prev = document.getElementById('prev-month'); const next = document.getElementById('next-month'); const input = document.getElementById('date'); const openBtn = document.getElementById('open-cal');
+      if (!dp || !grid || !title || !prev || !next || !input || !openBtn) return;
+      let view = new Date(); view.setDate(1);
+      const pad = n => String(n).padStart(2, '0'); const toISO = dt => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`; const min = new Date(input.min || new Date()); min.setHours(0, 0, 0, 0);
+      function render() { grid.innerHTML = ''; title.textContent = `${view.getFullYear()} / ${pad(view.getMonth() + 1)}`;['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(w => { const h = document.createElement('div'); h.textContent = w; h.className = 'dp-cell muted'; grid.appendChild(h); }); const first = new Date(view.getFullYear(), view.getMonth(), 1); const start = new Date(first); start.setDate(first.getDate() - first.getDay()); for (let i = 0; i < 42; i++) { const day = new Date(start); day.setDate(start.getDate() + i); const cell = document.createElement('button'); cell.type = 'button'; cell.className = 'dp-cell'; if (day.getMonth() !== view.getMonth()) cell.classList.add('muted'); if (day < min) cell.classList.add('disabled'); cell.textContent = day.getDate(); const chosen = input.value ? new Date(input.value) : null; const chosenISO = chosen ? toISO(chosen) : null; if (chosenISO && toISO(day) === chosenISO) cell.classList.add('sel'); cell.addEventListener('click', () => { input.value = toISO(day); dp.classList.remove('show'); }); grid.appendChild(cell); } }
+      prev.addEventListener('click', () => { view.setMonth(view.getMonth() - 1); render(); }); next.addEventListener('click', () => { view.setMonth(view.getMonth() + 1); render(); }); openBtn.addEventListener('click', () => { dp.classList.toggle('show'); render(); }); input.addEventListener('focus', () => { dp.classList.add('show'); render(); }); document.addEventListener('click', (e) => { if (!dp.contains(e.target) && !openBtn.contains(e.target) && e.target !== input) { dp.classList.remove('show'); } });
+    }
+
+    // ===== INIT =====
+    function init() { initCities(); defaultDate(); buildDatepicker(); drawMapD3(); const btn = document.getElementById('btn-run'); if (btn) btn.addEventListener('click', calc); window.addEventListener('resize', () => drawMapD3()); }
+    (function () { if (document.readyState !== 'loading') init(); else document.addEventListener('DOMContentLoaded', init, { once: true }); })();
+  </script>
+</body>
+
+</html>
